@@ -1,0 +1,650 @@
+/* Homepage sections — HealthiConnect brand #26767F */
+
+:root {
+  --hc-brand: #26767f;
+  --hc-brand-hover: #1f636b;
+  --hc-brand-soft: rgba(38, 118, 127, 0.1);
+  --hc-brand-soft-strong: rgba(38, 118, 127, 0.16);
+  --hc-footer-bg: #1c3338;
+  --hc-text-muted: #475569;
+}
+
+.hc-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.hc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.25;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hc-btn--primary {
+  background: var(--hc-brand);
+  color: #ffffff;
+}
+
+.hc-btn--primary:hover {
+  background: var(--hc-brand-hover);
+}
+
+.hc-btn--primary:focus-visible {
+  outline: 2px solid var(--hc-brand);
+  outline-offset: 2px;
+}
+
+/* Stats bar */
+.hc-stats {
+  width: 100%;
+  background: linear-gradient(180deg, var(--hc-brand-soft) 0%, transparent 100%);
+  border-top: 1px solid rgba(38, 118, 127, 0.12);
+  border-bottom: 1px solid rgba(38, 118, 127, 0.12);
+}
+
+.hc-stats__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.hc-stats__item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.hc-stats__icon {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--hc-brand);
+}
+
+.hc-stats__label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .hc-stats__inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1.35rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hc-stats__inner {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 1.45rem 1.5rem;
+  }
+}
+
+/* Section shell */
+.hc-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .hc-section {
+    padding: 4rem 1.5rem;
+  }
+}
+
+.hc-section__narrow {
+  max-width: 640px;
+  margin-bottom: 2rem;
+}
+
+.hc-section__title {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--hc-brand);
+}
+
+.hc-section__lead {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--hc-text-muted);
+}
+
+/* Specialties grid */
+.hc-specialties__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 520px) {
+  .hc-specialties__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .hc-specialties__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.125rem;
+  }
+}
+
+.hc-specialty-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.15rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  text-decoration: none;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 0.98rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.hc-specialty-card:hover {
+  border-color: var(--hc-brand);
+  box-shadow: 0 12px 28px rgba(38, 118, 127, 0.14);
+  transform: translateY(-2px);
+  color: var(--hc-brand);
+  background: #fafefe;
+}
+
+.hc-specialty-card:focus-visible {
+  outline: 2px solid var(--hc-brand);
+  outline-offset: 2px;
+}
+
+.hc-specialty-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 10px;
+  background: var(--hc-brand-soft);
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.hc-specialty-card:hover .hc-specialty-card__icon-wrap {
+  background: var(--hc-brand-soft-strong);
+}
+
+.hc-specialty-card__icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  color: var(--hc-brand);
+}
+
+.hc-specialty-card:hover .hc-specialty-card__icon {
+  color: var(--hc-brand-hover);
+}
+
+.hc-specialty-card__label {
+  line-height: 1.35;
+}
+
+/* Featured doctors (full-width band) */
+.hc-band--muted {
+  width: 100%;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 42%);
+}
+
+.hc-band .hc-featured-docs-inner {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+  .hc-band .hc-featured-docs-inner {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+
+.hc-featured-docs__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .hc-featured-docs__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.75rem;
+  }
+}
+
+.hc-doctor-card {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.hc-doctor-card__image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #e8f4f5;
+}
+
+.hc-doctor-card__image {
+  object-fit: cover;
+}
+
+.hc-doctor-card__badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #ffffff;
+  color: var(--hc-brand);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.hc-doctor-card__badge-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--hc-brand);
+}
+
+.hc-doctor-card__body {
+  padding: 1.25rem 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.35rem;
+}
+
+.hc-doctor-card__name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--hc-brand);
+}
+
+.hc-doctor-card__specialty {
+  margin: 0 0 0.75rem;
+  font-size: 0.93rem;
+  color: var(--hc-text-muted);
+}
+
+.hc-doctor-card__cta {
+  margin-top: auto;
+  width: 100%;
+  padding: 0.75rem 1rem;
+}
+
+/* Membership */
+.hc-membership__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+@media (min-width: 900px) {
+  .hc-membership__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.35rem;
+  }
+}
+
+.hc-plan-card {
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 1.5rem 1.35rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+.hc-plan-card--popular {
+  border: 2px solid var(--hc-brand);
+  box-shadow:
+    0 12px 32px rgba(38, 118, 127, 0.18),
+    0 0 0 1px rgba(38, 118, 127, 0.08);
+  background: linear-gradient(180deg, rgba(38, 118, 127, 0.06) 0%, #ffffff 38%);
+}
+
+.hc-plan-card__ribbon {
+  margin: -0.35rem 0 0.85rem;
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--hc-brand);
+  color: #ffffff;
+}
+
+.hc-plan-card__name {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--hc-brand);
+}
+
+.hc-plan-card__price {
+  margin: 0.85rem 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.hc-plan-card__amount {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.hc-plan-card__period {
+  font-size: 0.95rem;
+  color: var(--hc-text-muted);
+  font-weight: 600;
+}
+
+.hc-plan-card__description {
+  margin: 0.6rem 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--hc-text-muted);
+}
+
+.hc-plan-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex: 1;
+}
+
+.hc-plan-card__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.93rem;
+  color: #334155;
+}
+
+.hc-plan-card__check {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  color: var(--hc-brand);
+}
+
+.hc-plan-card__cta {
+  width: 100%;
+  padding: 0.8rem 1rem;
+}
+
+.hc-plan-card--popular .hc-plan-card__cta {
+  box-shadow: 0 6px 16px rgba(38, 118, 127, 0.25);
+}
+
+/* Partners */
+.hc-partners__grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .hc-partners__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .hc-partners__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.125rem;
+  }
+}
+
+.hc-partners__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(38, 118, 127, 0.28);
+  background: var(--hc-brand-soft);
+}
+
+.hc-partners__logo {
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-align: center;
+  line-height: 1.35;
+  color: var(--hc-brand);
+  letter-spacing: -0.01em;
+}
+
+/* Footer */
+.hc-footer {
+  background: var(--hc-footer-bg);
+  color: #e2e8f0;
+  margin-top: 0;
+}
+
+.hc-footer__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .hc-footer__inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 3.25rem 1.5rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hc-footer__inner {
+    grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));
+    gap: 2rem 1.75rem;
+  }
+}
+
+.hc-footer__logo {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f8fafc;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.hc-footer__logo:hover {
+  color: #ffffff;
+}
+
+.hc-footer__tagline {
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #94a3b8;
+  max-width: 280px;
+}
+
+.hc-footer__heading {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(226, 232, 240, 0.9);
+}
+
+.hc-footer__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.hc-footer__link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.93rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.hc-footer__link:hover {
+  color: #7dd3c4;
+}
+
+.hc-footer__address {
+  font-size: 0.93rem;
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+.hc-footer__newsletter-text {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #94a3b8;
+}
+
+.hc-footer__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hc-footer__input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.35);
+  color: #f1f5f9;
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.75rem 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hc-footer__input::placeholder {
+  color: #64748b;
+}
+
+.hc-footer__input:focus {
+  border-color: var(--hc-brand);
+  box-shadow: 0 0 0 3px rgba(38, 118, 127, 0.35);
+}
+
+.hc-footer__submit {
+  width: 100%;
+  padding: 0.78rem 1rem;
+}
+
+.hc-footer__submit:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.hc-footer__form-message {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.hc-footer__form-message--success {
+  color: #a7f3d0;
+}
+
+.hc-footer__form-message--error {
+  color: #fecaca;
+}
+
+.hc-footer__bottom {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 1.15rem 1.25rem 1.5rem;
+}
+
+.hc-footer__copy {
+  max-width: 1120px;
+  margin: 0 auto;
+  font-size: 0.82rem;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .hc-footer__copy {
+    text-align: left;
+    padding: 0 1.5rem;
+  }
+}

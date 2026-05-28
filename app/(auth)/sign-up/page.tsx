@@ -1,0 +1,28 @@
+import { PatientAuthPage } from "@/components/patient/patient-auth-page";
+
+export const metadata = {
+  title: "Patient Sign Up | HealthiConnect",
+  description:
+    "Create a HealthiConnect patient account to review doctors and access member features.",
+};
+
+type PageProps = {
+  searchParams?: Promise<{ redirect?: string | string[] }>;
+};
+
+async function resolveRedirect(
+  searchParams: PageProps["searchParams"],
+): Promise<string | undefined> {
+  const resolved = searchParams ? await searchParams : undefined;
+  const raw = resolved?.redirect;
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  if (Array.isArray(raw) && typeof raw[0] === "string" && raw[0].trim()) {
+    return raw[0].trim();
+  }
+  return undefined;
+}
+
+export default async function SignUpPage({ searchParams }: PageProps) {
+  const redirectTo = await resolveRedirect(searchParams);
+  return <PatientAuthPage mode="sign-up" redirectTo={redirectTo} />;
+}

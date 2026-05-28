@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8f4f5"/>
+      <stop offset="55%" stop-color="#d4eef0"/>
+      <stop offset="100%" stop-color="#c5e8eb"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#26767F" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#26767F" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect x="80" y="120" width="1040" height="660" rx="28" fill="white" fill-opacity="0.55"/>
+  <path d="M200 620c140-240 660-240 800 0" stroke="#26767F" stroke-opacity="0.35" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="420" cy="380" r="120" fill="url(#accent)"/>
+  <circle cx="780" cy="400" r="90" fill="#26767F" fill-opacity="0.22"/>
+  <rect x="360" y="480" width="480" height="36" rx="18" fill="#26767F" fill-opacity="0.12"/>
+  <rect x="420" y="540" width="360" height="22" rx="11" fill="#26767F" fill-opacity="0.08"/>
+</svg>
