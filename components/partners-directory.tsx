@@ -46,7 +46,7 @@ export function PartnersDirectory({ partners }: PartnersDirectoryProps) {
 
     return partners.filter((partner) => {
       const nameMatches = partner.name.toLowerCase().includes(normalized);
-      const typeMatches = TYPE_LABELS[partner.type]
+      const typeMatches = PARTNER_TYPE_LABELS[partner.type]
         .toLowerCase()
         .includes(normalized);
       const addressMatches =
