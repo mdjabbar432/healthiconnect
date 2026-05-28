@@ -21,6 +21,38 @@ function readMetadataId(
   return undefined;
 }
 
+/** Stripe API >= 2024 places subscription on invoice.parent; webhooks may still send the legacy field. */
+type InvoiceWithLegacySubscription = Stripe.Invoice & {
+  subscription?: string | Stripe.Subscription | null;
+};
+
+/** Stripe API >= 2024 links payment intents via invoice.payments; webhooks may still send the legacy field. */
+type InvoiceWithLegacyPaymentIntent = Stripe.Invoice & {
+  payment_intent?: string | Stripe.PaymentIntent | null;
+};
+
+function resolveStripeId(
+  ref: string | { id: string } | null | undefined,
+): string | null {
+  if (!ref) return null;
+  return typeof ref === "string" ? ref : ref.id;
+}
+
+function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
+  const fromParent = invoice.parent?.subscription_details?.subscription;
+  const legacy = (invoice as InvoiceWithLegacySubscription).subscription;
+  return resolveStripeId(fromParent ?? legacy);
+}
+
+function getInvoicePaymentIntentId(invoice: Stripe.Invoice): string | null {
+  for (const payment of invoice.payments?.data ?? []) {
+    const paymentIntentId = resolveStripeId(payment.payment?.payment_intent);
+    if (paymentIntentId) return paymentIntentId;
+  }
+
+  return resolveStripeId((invoice as InvoiceWithLegacyPaymentIntent).payment_intent);
+}
+
 export async function fulfillCheckoutSessionCompleted(
   admin: SupabaseClient,
   session: Stripe.Checkout.Session,
@@ -62,9 +94,7 @@ export async function recordInvoicePaymentAndCommission(
   stripe: Stripe,
   invoice: Stripe.Invoice,
 ): Promise<void> {
-  const subscriptionRef = invoice.subscription;
-  const subscriptionId =
-    typeof subscriptionRef === "string" ? subscriptionRef : subscriptionRef?.id;
+  const subscriptionId = getInvoiceSubscriptionId(invoice);
 
   if (!subscriptionId || invoice.amount_paid <= 0) return;
 
@@ -130,10 +160,7 @@ export async function recordInvoicePaymentAndCommission(
     .insert({
       patient_membership_id: membership.id,
       stripe_invoice_id: invoiceId,
-      stripe_payment_intent_id:
-        typeof invoice.payment_intent === "string"
-          ? invoice.payment_intent
-          : invoice.payment_intent?.id ?? null,
+      stripe_payment_intent_id: getInvoicePaymentIntentId(invoice),
       amount_cents: invoice.amount_paid,
       currency: invoice.currency ?? "usd",
       paid_at: new Date(
