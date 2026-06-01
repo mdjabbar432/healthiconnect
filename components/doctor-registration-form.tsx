@@ -8,10 +8,20 @@ import {
   Stethoscope,
   AlertCircle,
   Info,
+  Upload,
 } from "lucide-react";
 import { DIRECTORY_LANGUAGES } from "@/lib/constants/languages";
 import { DIRECTORY_SPECIALTIES } from "@/lib/constants/specialties";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { doctorRegistrationFormSchema } from "@/lib/validations/doctor-registration";
+
+const MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_PROFILE_PHOTO_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+]);
 
 const inputClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-hc-brand focus:outline-none focus:ring-2 focus:ring-hc-brand/20 disabled:opacity-50";
@@ -49,19 +59,88 @@ export function DoctorRegistrationForm({ onSuccess }: DoctorRegistrationFormProp
   const [specialty, setSpecialty] = useState("");
   const [language, setLanguage] = useState("");
   const [location, setLocation] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  const [profileUrl, setProfileUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successDraft, setSuccessDraft] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!ACCEPTED_PROFILE_PHOTO_TYPES.has(file.type)) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        photoUrl: "Please upload a PNG, JPG, or WEBP image.",
+      }));
+      return;
+    }
+
+    if (file.size > MAX_PROFILE_PHOTO_BYTES) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        photoUrl: "Image must be 5MB or smaller.",
+      }));
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        photoUrl:
+          "File upload is unavailable. Check Supabase configuration in .env.local.",
+      }));
+      return;
+    }
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.photoUrl;
+      return next;
+    });
+    setUploading(true);
+
+    const extension =
+      file.name.split(".").pop()?.toLowerCase() ||
+      (file.type === "image/png"
+        ? "png"
+        : file.type === "image/webp"
+          ? "webp"
+          : "jpg");
+    const filePath = `doctor-profiles/${Math.random()}.${extension}`;
+
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        photoUrl: error.message || "Upload failed. Please try again.",
+      }));
+      setUploading(false);
+      return;
+    }
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    setProfileUrl(data.publicUrl);
+    setUploading(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFieldErrors({});
     setSubmitting(true);
 
-    const trimmedPhoto = photoUrl.trim();
+    const trimmedPhoto = profileUrl.trim();
     const parsed = doctorRegistrationFormSchema.safeParse({
       fullName,
       email,
@@ -346,20 +425,60 @@ export function DoctorRegistrationForm({ onSuccess }: DoctorRegistrationFormProp
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="photoUrl" className="mb-1.5 block text-sm font-medium text-slate-700">
-            Profile photo URL
+          <span
+            id="profilePhoto-label"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Profile photo
+          </span>
+          <label
+            htmlFor="profilePhoto"
+            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-gray-300 bg-slate-50/50 px-6 py-10 transition-colors hover:border-[#1e7a82] hover:bg-slate-50 ${
+              submitting || uploading ? "pointer-events-none opacity-60" : ""
+            }`}
+            aria-labelledby="profilePhoto-label"
+          >
+            {uploading ? (
+              <p className="text-sm font-medium text-slate-600">Uploading...</p>
+            ) : profileUrl ? (
+              <div className="flex flex-col items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={profileUrl}
+                  alt="Profile preview"
+                  className="h-20 w-20 rounded-full object-cover ring-2 ring-[#1e7a82]/20"
+                />
+                <p className="text-sm font-medium text-emerald-600">
+                  ✓ Uploaded Successfully
+                </p>
+                <p className="text-xs text-slate-500">Click to replace image</p>
+              </div>
+            ) : (
+              <>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+                  <Upload className="h-6 w-6 text-[#1e7a82]" aria-hidden />
+                </span>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-800">
+                    Upload a file
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    PNG, JPG, WEBP up to 5MB
+                  </p>
+                </div>
+              </>
+            )}
+            <input
+              id="profilePhoto"
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleFileUpload}
+              disabled={submitting || uploading}
+            />
           </label>
-          <input
-            id="photoUrl"
-            type="url"
-            value={photoUrl}
-            onChange={(e) => setPhotoUrl(e.target.value)}
-            className={inputClassName}
-            placeholder="https://example.com/your-photo.jpg"
-            disabled={submitting}
-          />
           <p className="mt-1 text-xs text-slate-500">
-            Optional. Link to a professional headshot (HTTPS URL).
+            Optional. A professional headshot helps patients recognize you.
           </p>
           {fieldErrors.photoUrl ? (
             <p className="mt-1 text-xs text-red-600">{fieldErrors.photoUrl}</p>
@@ -387,7 +506,7 @@ export function DoctorRegistrationForm({ onSuccess }: DoctorRegistrationFormProp
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || uploading}
         className="mt-8 flex w-full items-center justify-center gap-2 rounded-[10px] bg-hc-brand px-4 py-3 text-sm font-semibold text-white transition hover:bg-hc-brand-hover disabled:opacity-60"
       >
         {submitting ? (

@@ -7,7 +7,8 @@ import { AppToast } from "@/components/ui/app-toast";
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
   { href: "/doctors", label: "Find Doctors" },
-  { href: "#", label: "Specialties" },
+  { href: "/specialties", label: "Specialties" },
+  { href: "/about", label: "About Us" },
   { href: "/membership", label: "Membership" },
   { href: "/sign-in", label: "Sign In" },
 ] as const;

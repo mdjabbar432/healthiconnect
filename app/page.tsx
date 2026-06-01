@@ -31,11 +31,12 @@ export default async function HomePage() {
 
           <div className="hero-image-box">
             <Image
-              src="/assets/images/healthi-connect-banner.svg"
-              alt="Medical Healthcare"
-              fill
-              unoptimized
+              src="/assets/images/healthi-connect-banner.webp"
+              alt="HealthiConnect Banner"
+              width={2048}
+              height={1366}
               className="hero-image"
+              sizes="(max-width: 1024px) 100vw, 560px"
               priority
             />
           </div>
