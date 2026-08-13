@@ -1,17 +1,17 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
-const supabaseServiceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "").trim();
 
-let adminClient: SupabaseClient | null = null;
+let serverClient: SupabaseClient | null = null;
 
-/** Needed for `/doctors` and other server fetches via the service role. */
+/** True when NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set. */
 export function isSupabaseServerConfigured(): boolean {
-  return supabaseUrl.length > 0 && supabaseServiceRoleKey.length > 0;
+  return supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
 }
 
-function createSupabaseAdmin(): SupabaseClient {
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+function createSupabaseServerClient(): SupabaseClient {
+  return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -20,25 +20,26 @@ function createSupabaseAdmin(): SupabaseClient {
 }
 
 /**
- * Lazy service-role client. Returns null when env vars are missing (never throws on access).
+ * Lazy server Supabase client using NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY.
+ * Returns null when those env vars are missing (never throws on access).
  */
 export function getSupabaseAdmin(): SupabaseClient | null {
   if (!isSupabaseServerConfigured()) {
     return null;
   }
 
-  if (!adminClient) {
-    adminClient = createSupabaseAdmin();
+  if (!serverClient) {
+    serverClient = createSupabaseServerClient();
   }
 
-  return adminClient;
+  return serverClient;
 }
 
 export function requireSupabaseAdmin(): SupabaseClient {
   const client = getSupabaseAdmin();
   if (!client) {
     throw new Error(
-      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local.",
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
     );
   }
   return client;
@@ -50,7 +51,7 @@ export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
     const client = getSupabaseAdmin();
     if (!client) {
       throw new Error(
-        "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local.",
+        "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
       );
     }
     const value = Reflect.get(client, prop, client);

@@ -41,7 +41,10 @@ export default async function DoctorsPage({ searchParams }: PageProps) {
     location: location || undefined,
   });
 
+  console.log("Fetched doctors:", rows, "Error:", error);
+
   if (error) {
+    console.error("Supabase Doctor Fetch Error:", error);
     return (
       <>
         <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-16 pt-6 sm:pt-10">

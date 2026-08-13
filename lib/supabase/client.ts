@@ -11,7 +11,8 @@ export function isSupabaseClientConfigured(): boolean {
 }
 
 /**
- * Lazy browser client. Returns null when env vars are missing (never throws on import).
+ * Lazy browser client using NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY.
+ * Returns null when those env vars are missing (never throws on import).
  */
 export function getSupabaseClient(): SupabaseClient | null {
   if (!isSupabaseClientConfigured()) {
