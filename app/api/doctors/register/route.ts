@@ -5,6 +5,7 @@ import {
   isAuthRateLimitError,
   isAuthUserAlreadyExists,
 } from "@/lib/auth/auth-error-messages";
+import { createConfirmedAuthUser } from "@/lib/auth/create-confirmed-user";
 import { isDevRegistrationBypassEnabled } from "@/lib/env/dev-registration";
 import { completeDoctorRegistration } from "@/lib/doctors/complete-doctor-registration";
 import { createDraftDoctorApplication } from "@/lib/doctors/create-draft-doctor-application";
@@ -13,6 +14,11 @@ import {
   doctorRegistrationRequestSchema,
   doctorRegistrationWithUserIdSchema,
 } from "@/lib/validations/doctor-registration";
+
+export const runtime = "nodejs";
+
+const ADMIN_NOT_CONFIGURED =
+  "Supabase is not configured on the server. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.";
 
 async function findAuthUserIdByEmail(
   admin: ReturnType<typeof getSupabaseAdmin>,
@@ -42,10 +48,7 @@ async function findAuthUserIdByEmail(
 export async function POST(req: Request) {
   const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Supabase is not configured on the server." },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: ADMIN_NOT_CONFIGURED }, { status: 503 });
   }
 
   const body = await req.json();
@@ -83,16 +86,15 @@ export async function POST(req: Request) {
     : undefined;
 
   if (!userId && withPassword.success) {
-    const { data: created, error: createError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: email.toLowerCase(),
+    const { user: created, error: createError } = await createConfirmedAuthUser(
+      supabaseAdmin,
+      {
+        email,
         password: withPassword.data.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: fullName,
-          role: "doctor",
-        },
-      });
+        fullName,
+        role: "doctor",
+      },
+    );
 
     if (createError) {
       console.error(
@@ -166,7 +168,7 @@ export async function POST(req: Request) {
         );
       }
     } else {
-      userId = created.user?.id;
+      userId = created?.id;
     }
   }
 

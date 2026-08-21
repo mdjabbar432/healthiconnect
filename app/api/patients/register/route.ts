@@ -3,9 +3,15 @@ import {
   isAuthRateLimitError,
   isAuthUserAlreadyExists,
 } from "@/lib/auth/auth-error-messages";
+import { createConfirmedAuthUser } from "@/lib/auth/create-confirmed-user";
 import { completePatientRegistration } from "@/lib/patients/complete-patient-registration";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { patientRegistrationRequestSchema } from "@/lib/validations/patient-auth";
+
+export const runtime = "nodejs";
+
+const ADMIN_NOT_CONFIGURED =
+  "Supabase is not configured on the server. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.";
 
 async function findAuthUserIdByEmail(
   admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
@@ -33,10 +39,7 @@ async function findAuthUserIdByEmail(
 export async function POST(req: Request) {
   const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Supabase is not configured on the server." },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: ADMIN_NOT_CONFIGURED }, { status: 503 });
   }
 
   let body: unknown;
@@ -58,18 +61,17 @@ export async function POST(req: Request) {
 
   let userId: string | undefined;
 
-  const { data: created, error: createError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email: email.toLowerCase(),
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        role: "patient",
-      },
-    });
+  const { user: createdUser, error: createError } = await createConfirmedAuthUser(
+    supabaseAdmin,
+    { email, password, fullName, role: "patient" },
+  );
 
   if (createError) {
+    console.error(
+      "[POST /api/patients/register] auth.admin.createUser:",
+      createError,
+    );
+
     if (isAuthRateLimitError(createError.message)) {
       return NextResponse.json(
         {
@@ -104,7 +106,7 @@ export async function POST(req: Request) {
       );
     }
   } else {
-    userId = created.user?.id;
+    userId = createdUser?.id;
   }
 
   if (!userId) {

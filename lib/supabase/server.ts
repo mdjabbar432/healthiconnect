@@ -1,17 +1,27 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
-const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "").trim();
+const supabaseServiceRoleKey = (
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
+).trim();
 
-let serverClient: SupabaseClient | null = null;
+let adminClient: SupabaseClient | null = null;
 
-/** True when NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set. */
+const ADMIN_NOT_CONFIGURED_MESSAGE =
+  "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local.";
+
+/** True when NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set. */
 export function isSupabaseServerConfigured(): boolean {
-  return supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
+  return supabaseUrl.length > 0 && supabaseServiceRoleKey.length > 0;
 }
 
-function createSupabaseServerClient(): SupabaseClient {
-  return createClient(supabaseUrl, supabaseAnonKey, {
+/**
+ * Service-role client: bypasses RLS and is required for auth.admin.*
+ * (createUser, getUserById, listUsers). Never use the anon key here —
+ * GoTrue returns "User not allowed" for admin APIs without service_role.
+ */
+function createSupabaseAdminClient(): SupabaseClient {
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -20,7 +30,7 @@ function createSupabaseServerClient(): SupabaseClient {
 }
 
 /**
- * Lazy server Supabase client using NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY.
+ * Lazy server admin client using NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
  * Returns null when those env vars are missing (never throws on access).
  */
 export function getSupabaseAdmin(): SupabaseClient | null {
@@ -28,19 +38,17 @@ export function getSupabaseAdmin(): SupabaseClient | null {
     return null;
   }
 
-  if (!serverClient) {
-    serverClient = createSupabaseServerClient();
+  if (!adminClient) {
+    adminClient = createSupabaseAdminClient();
   }
 
-  return serverClient;
+  return adminClient;
 }
 
 export function requireSupabaseAdmin(): SupabaseClient {
   const client = getSupabaseAdmin();
   if (!client) {
-    throw new Error(
-      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
-    );
+    throw new Error(ADMIN_NOT_CONFIGURED_MESSAGE);
   }
   return client;
 }
@@ -50,9 +58,7 @@ export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
   get(_target, prop) {
     const client = getSupabaseAdmin();
     if (!client) {
-      throw new Error(
-        "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local.",
-      );
+      throw new Error(ADMIN_NOT_CONFIGURED_MESSAGE);
     }
     const value = Reflect.get(client, prop, client);
     return typeof value === "function" ? value.bind(client) : value;

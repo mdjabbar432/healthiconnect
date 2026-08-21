@@ -314,7 +314,7 @@ export async function fetchDirectoryDoctors(
 }> {
   if (!isSupabaseServerConfigured()) {
     const error =
-      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.";
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.";
     logDoctorFetchError(error);
     return { doctors: [], error };
   }

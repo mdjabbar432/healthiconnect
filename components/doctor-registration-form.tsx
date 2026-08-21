@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   Loader2,
@@ -51,6 +52,7 @@ export type DoctorRegistrationFormProps = {
 };
 
 export function DoctorRegistrationForm({ onSuccess }: DoctorRegistrationFormProps) {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -200,6 +202,22 @@ export function DoctorRegistrationForm({ onSuccess }: DoctorRegistrationFormProp
 
       const draft = Boolean(payload.draft);
       const message = payload.message ?? null;
+
+      if (!draft) {
+        const client = getSupabaseClient();
+        if (client) {
+          const { error: signInError } = await client.auth.signInWithPassword({
+            email: parsed.data.email,
+            password: parsed.data.password,
+          });
+          if (!signInError) {
+            onSuccess?.({ draft: false, message: null });
+            router.replace("/doctor/dashboard");
+            return;
+          }
+        }
+      }
+
       setSuccessDraft(draft);
       setSuccessMessage(message);
       setSuccess(true);
