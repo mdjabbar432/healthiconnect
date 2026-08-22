@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2, Lock, LogIn, Mail } from "lucide-react";
-import { isEmailAllowedForPath } from "@/lib/auth/route-access";
+import { fetchAuthSessionFromApi } from "@/lib/auth/fetch-auth-session";
+import { resolvePostLoginPath } from "@/lib/auth/route-access";
 import { mapSignInErrorMessage } from "@/lib/auth/sign-in-error-messages";
-import { sanitizeRedirectPath } from "@/lib/auth/redirect";
+import { withTimeout } from "@/lib/auth/with-timeout";
 import {
   getSupabaseClient,
   isSupabaseClientConfigured,
@@ -15,6 +16,8 @@ import { doctorLoginFormSchema } from "@/lib/validations/doctor-login";
 const inputClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-hc-brand focus:outline-none focus:ring-2 focus:ring-hc-brand/20 disabled:opacity-50";
 
+const SIGN_IN_TIMEOUT_MS = 15_000;
+
 type FieldErrors = Partial<Record<"email" | "password" | "form", string>>;
 
 export type PortalLoginFormProps = {
@@ -23,12 +26,11 @@ export type PortalLoginFormProps = {
 
 export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
   const router = useRouter();
-  const destination = sanitizeRedirectPath(redirectTo, "/");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [submitting, setSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseClientConfigured()) return;
@@ -40,16 +42,21 @@ export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
       if (!client || cancelled) return;
 
       const { data } = await client.auth.getSession();
-      const userEmail = data.session?.user?.email;
-      if (!userEmail || cancelled) return;
+      const accessToken = data.session?.access_token;
+      if (!accessToken || cancelled) return;
 
-      if (isEmailAllowedForPath(userEmail, destination)) {
-        router.replace(destination);
+      const session = await fetchAuthSessionFromApi(accessToken).catch(
+        () => null,
+      );
+      if (cancelled) return;
+
+      if (!session?.role) {
+        // Stale session or missing profile — clear it so a new sign-in can proceed.
+        await client.auth.signOut();
         return;
       }
 
-      // Stale or wrong-role session (middleware sent us here). Clear it so sign-in works.
-      await client.auth.signOut();
+      router.replace(resolvePostLoginPath(session.role, redirectTo));
     }
 
     void reconcileSession();
@@ -57,7 +64,7 @@ export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
     return () => {
       cancelled = true;
     };
-  }, [destination, router]);
+  }, [redirectTo, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,35 +90,75 @@ export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
       return;
     }
 
-    setSubmitting(true);
+    setIsLoading(true);
+
+    const client = getSupabaseClient();
+    let establishedSession = false;
 
     try {
-      const client = getSupabaseClient();
       if (!client) {
         setFieldErrors({
           form: "Authentication is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
         });
-        setSubmitting(false);
         return;
       }
 
-      const { error: authError } = await client.auth.signInWithPassword({
-        email: parsed.data.email,
-        password: parsed.data.password,
-      });
+      const { data: authData, error: authError } = await withTimeout(
+        client.auth.signInWithPassword({
+          email: parsed.data.email,
+          password: parsed.data.password,
+        }),
+        SIGN_IN_TIMEOUT_MS,
+        "Sign-in timed out. Check your connection and try again.",
+      );
 
       if (authError) {
         setFieldErrors({ form: mapSignInErrorMessage(authError.message) });
-        setSubmitting(false);
         return;
       }
 
+      establishedSession = true;
+
+      const accessToken = authData.session?.access_token;
+      if (!authData.user?.id || !accessToken) {
+        await client.auth.signOut();
+        setFieldErrors({
+          form: "Sign in succeeded but no session was returned. Please try again.",
+        });
+        return;
+      }
+
+      const session = await fetchAuthSessionFromApi(accessToken);
+      if (!session?.role) {
+        await client.auth.signOut();
+        setFieldErrors({
+          form: "We could not load your profile role. Please contact support.",
+        });
+        return;
+      }
+
+      if (session.role === "patient") {
+        await client.auth.signOut();
+        setFieldErrors({
+          form: "This portal is for staff accounts. Use the patient sign-in page.",
+        });
+        return;
+      }
+
+      const destination = resolvePostLoginPath(session.role, redirectTo);
       router.replace(destination);
-    } catch {
-      setFieldErrors({
-        form: "Something went wrong. Check your connection and try again.",
-      });
-      setSubmitting(false);
+      router.refresh();
+    } catch (error) {
+      if (!establishedSession) {
+        await client?.auth.signOut().catch(() => {});
+      }
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Something went wrong. Check your connection and try again.";
+      setFieldErrors({ form: message });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -152,7 +199,7 @@ export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
               onChange={(e) => setEmail(e.target.value)}
               className={`${inputClassName} pl-10`}
               placeholder="you@healthiconnect.com"
-              disabled={submitting}
+              disabled={isLoading}
             />
           </div>
           {fieldErrors.email ? (
@@ -180,7 +227,7 @@ export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               className={`${inputClassName} pl-10`}
               placeholder="Your password"
-              disabled={submitting}
+              disabled={isLoading}
             />
           </div>
           {fieldErrors.password ? (
@@ -191,10 +238,10 @@ export function PortalLoginForm({ redirectTo }: PortalLoginFormProps) {
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={isLoading}
         className="mt-8 flex w-full items-center justify-center gap-2 rounded-[10px] bg-hc-brand px-4 py-3 text-sm font-semibold text-white transition hover:bg-hc-brand-hover disabled:opacity-60"
       >
-        {submitting ? (
+        {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
             Signing in…
